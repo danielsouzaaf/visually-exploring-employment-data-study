@@ -52,3 +52,11 @@ F))
 }
 ```
 
+```{r}
+codes <- c('agglevel','industry','ownership','size')
+ann2017full <- ann2017
+for(i in 1:length(codes)){
+eval(parse(text=paste('ann2017full <- left_join(ann2017full, ',codes[i],')', sep='')))
+}
+```
+
