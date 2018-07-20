@@ -40,7 +40,7 @@ ann2017 <- fread('data/2017.annual.singlefile.csv', sep=',')
 
 ```{r}
 dim(ann2017)
-```.
+```
 
 
 ```{r}
@@ -238,6 +238,40 @@ ggplot(chor, aes(long,lat,group=group))+
       axis.text.y=element_blank(),   
      axis.ticks.x=element_blank(), 
      axis.ticks.y=element_blank())
+```
+
+```{r}
+get_data <- function(zipfile){
+  unzip(file.path('data',zipfile), exdir='data') # unzips the file
+  csvfile <- gsub('zip','csv', zipfile) # Change file name
+  csvfile <- gsub('_','.',csvfile) # Change _ to . in name
+  dat <- fread(file.path('data', csvfile)) # read data
+  dat <- left_join(dat, myarea)
+  dat <- filter(dat, agglvl_code==70) %>% # County-level aggregate
+  select(state, county, avg_annual_pay) # Keep variables
+  return(dat)
+}
+```
+
+```{r}
+#install.packages('doParallel')
+```
+
+```{r}
+files <- dir('data', pattern='annual_singlefile.zip') # file names
+n <- length(files)
+dat_list <- vector('list',n) # Initialize the list
+for(i in 1:n){
+  dat_list[[i]]<- get_data(files[i])  # ingest data
+  names(dat_list)[i] <- substr(files[i],1,4) #label list with years
+}
+```
+
+```{r}
+#annpay <- ldply(dat_list) # puts all the data together
+#breaks <- quantile(annpay$avg_annual_pay,    
+#c(seq(0,.8,.2),.9,.95,.99,1)) # Makes a common set of breaks
+
 ```
 
 
