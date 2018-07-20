@@ -179,4 +179,39 @@ mutate(wage=Discretize(avg_annual_pay),
 empquantile=Discretize(annual_avg_emplvl))
 ```
 
+```{r}
+state_df <- map_data('state')
+county_df <- map_data('county')
+```
+
+```{r}
+transform_mapdata <- function(x){
+   names(x)[5:6] <- c('state','county')
+   for(u in c('state','county')){
+     x[,u] <- sapply(x[,u],simpleCap)
+   }
+   return(x)
+}
+state_df <- transform_mapdata(state_df)
+county_df <- transform_mapdata(county_df)
+```
+
+```{r}
+chor <- left_join(state_df, d.state, by='state')
+ggplot(chor, aes(long,lat,group=group))+
+geom_polygon(aes(fill=wage))+geom_path(color='black',size=0.2) + scale_fill_brewer(palette='PuRd') + theme(axis.text.x=element_blank(), 
+axis.text.y=element_blank(), axis.ticks.x=element_blank(), 
+axis.ticks.y=element_blank())
+```
+```{r}
+chor <- left_join(county_df, d.cty)
+ggplot(chor, aes(long,lat, group=group))+
+  geom_polygon(aes(fill=wage))+
+  geom_path( color='white',alpha=0.5,size=0.2)+
+  geom_polygon(data=state_df, color='black',fill=NA)+
+  scale_fill_brewer(palette='PuRd')+
+  labs(x='',y='', fill='Avg Annual Pay')+
+  theme(axis.text.x=element_blank(), axis.text.y=element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank())
+```
+
 
