@@ -40,7 +40,7 @@ ann2017 <- fread('data/2017.annual.singlefile.csv', sep=',')
 
 ```{r}
 dim(ann2017)
-```
+```.
 
 
 ```{r}
@@ -78,7 +78,7 @@ paste(toupper(substring(s,1,1)), substring(s,2), sep='', collapse=' ')
 data(county.fips)
 head(county.fips)
 ```
-
+.
 ```{r}
 county.fips$fips <- str_pad(county.fips$fips, width=5, pad="0")
 ```
@@ -139,4 +139,44 @@ quantile(d.state$avg_annual_pay, c(seq(0,.8, by=.2), .9, .95, .99, 1)))
 d.state$empquantile <- cut(d.state$annual_avg_emplvl, 
  quantile(d.state$annual_avg_emplvl, c(seq(0,.8,by=.2),.9,.95,.99,1)))
 ```
+
+```{r}
+x <- quantile(d.state$avg_annual_pay, c(seq(0,.8,by=.2),.9, .95, .99, 1))
+xx <- paste(round(x/1000),'K',sep='')
+Labs <- paste(xx[-length(xx)],xx[-1],sep='-')
+levels(d.state$wage) <- Labs
+
+x <- quantile(d.state$annual_avg_emplvl, c(seq(0,.8,by=.2),.9, .95, .99, 1))
+xx <- ifelse(x>1000, paste(round(x/1000),'K',sep=''),round(x))
+Labs <- paste(xx[-length(xx)],xx[-1],sep='-')
+levels(d.state$empquantile) <- Labs
+```
+
+```{r}
+Discretize <- function(x, breaks=NULL){
+if(is.null(breaks)){
+    breaks <- quantile(x, c(seq(0,.8,by=.2),.9, .95, .99, 1))
+    if (sum(breaks==0)>1) { 
+      temp <- which(breaks==0, arr.ind=TRUE)
+      breaks <- breaks[max(temp):length(breaks)]
+    }
+  }
+  x.discrete <- cut(x, breaks, include.lowest=TRUE)
+  breaks.eng <- ifelse(breaks > 1000,
+                       paste0(round(breaks/1000),'K'),
+                       round(breaks))
+  Labs <- paste(breaks.eng[-length(breaks.eng)], breaks.eng[-
+1],
+                sep='-')
+  levels(x.discrete) <- Labs
+  return(x.discrete)
+}
+```
+
+```{r}
+d.cty <- filter(ann2017full, agglvl_code==70) %>% select(state,county,abb, avg_annual_pay,annual_avg_emplvl)%>%
+mutate(wage=Discretize(avg_annual_pay),
+empquantile=Discretize(annual_avg_emplvl))
+```
+
 
