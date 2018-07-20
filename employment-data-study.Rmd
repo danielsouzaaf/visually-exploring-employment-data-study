@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 ```{r message=FALSE, warning=FALSE}
 install.packages('data.table',repos='https://cran.fiocruz.br/')
@@ -58,5 +60,83 @@ ann2017full <- ann2017
 for(i in 1:length(codes)){
 eval(parse(text=paste('ann2017full <- left_join(ann2017full, ',codes[i],')', sep='')))
 }
+```
+```{r}
+head(area)
+```
+
+```{r}
+simpleCap <-function(x){
+if(!is.na(x)){
+s <- strsplit(x,' ')[[1]]
+paste(toupper(substring(s,1,1)), substring(s,2), sep='', collapse=' ')
+} else {NA}
+}
+```
+
+```{r}
+data(county.fips)
+head(county.fips)
+```
+
+```{r}
+county.fips$fips <- str_pad(county.fips$fips, width=5, pad="0")
+```
+
+```{r}
+county.fips$polyname <- as.character(county.fips$polyname)
+county.fips$county <- sapply(
+  gsub('[a-z\ ]+,([a-z\ ]+)','\\1',county.fips$polyname), simpleCap)
+county.fips <- unique(county.fips)
+```
+
+```{r}
+data(state.fips)
+```
+
+```{r}
+state.fips$fips <- str_pad(state.fips$fips, width=2, pad="0", side='left')
+state.fips$state <- as.character(state.fips$polyname)
+state.fips$state <- gsub("([a-z\ ]+):[a-z\ \\']+",'\\1',state.fips$state)
+state.fips$state <- sapply(state.fips$state, simpleCap)
+```
+
+```{r}
+mystatefips <-unique(state.fips[,c('fips','abb','state')])
+```
+
+```{r}
+lower48 <- setdiff(unique(state.fips$state),c('Hawaii','Alaska'))
+```
+
+```{r}
+myarea <- merge(area, county.fips, by.x='area_fips', by.y='fips', all.x=T)
+myarea$state_fips <- substr(myarea$area_fips, 1,2)
+myarea <- merge(myarea, mystatefips,by.x='state_fips',by.y='fips', all.x=T)
+```
+
+```{r}
+ann2017full <- left_join(ann2017full, myarea)
+ann2017full <- filter(ann2017full, state %in% lower48)
+```
+
+```{r}
+save(ann2017full, file='data/ann2017full.rda',compress=T)
+```
+
+```{r}
+head(ann2017full)
+```
+
+```{r}
+d.state <- filter(ann2017full, agglvl_code==50)
+d.state <- select(d.state, state, avg_annual_pay, annual_avg_emplvl)
+```
+
+```{r}
+d.state$wage <- cut(d.state$avg_annual_pay, 
+quantile(d.state$avg_annual_pay, c(seq(0,.8, by=.2), .9, .95, .99, 1)))
+d.state$empquantile <- cut(d.state$annual_avg_emplvl, 
+ quantile(d.state$annual_avg_emplvl, c(seq(0,.8,by=.2),.9,.95,.99,1)))
 ```
 
