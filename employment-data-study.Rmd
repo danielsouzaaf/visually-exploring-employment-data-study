@@ -1,0 +1,52 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+install.packages('data.table',repos='https://cran.fiocruz.br/')
+install.packages('plyr',repos='https://cran.fiocruz.br/')
+install.packages('dplyr',repos='https://cran.fiocruz.br/')
+install.packages('stringr',repos='https://cran.fiocruz.br/')
+install.packages('ggplot2',repos='https://cran.fiocruz.br/')
+install.packages('maps',repos='https://cran.fiocruz.br/')
+install.packages('bit64',repos='https://cran.fiocruz.br/')
+install.packages('RColorBrewer',repos='https://cran.fiocruz.br/')
+install.packages('choroplethr',repos='https://cran.fiocruz.br/')
+```
+
+
+```{r}
+install.packages('acs',repos='https://cran.fiocruz.br/')
+install.packages('tigris',repos='https://cran.fiocruz.br/')
+install.packages('choroplethr',repos='https://cran.fiocruz.br/')
+
+```
+
+```{r}
+library(data.table)
+library(plyr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(maps)
+library(bit64)
+library(RColorBrewer)
+library(choroplethr)
+```
+
+```{r}
+ann2017 <- fread('data/2017.annual.singlefile.csv')
+```
+
+```{r}
+dim(ann2017)
+```
+
+```{r}
+head(ann2017)
+```
+
+```{r}
+ann2017 <- fread('data/2017.annual.singlefile.csv', sep=',')
+```
+
