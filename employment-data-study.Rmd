@@ -268,10 +268,61 @@ for(i in 1:n){
 ```
 
 ```{r}
-#annpay <- ldply(dat_list) # puts all the data together
-#breaks <- quantile(annpay$avg_annual_pay,    
-#c(seq(0,.8,.2),.9,.95,.99,1)) # Makes a common set of breaks
+annpay <- ldply(dat_list) # puts all the data together
+breaks <- quantile(annpay$avg_annual_pay,    
+c(seq(0,.8,.2),.9,.95,.99,1)) # Makes a common set of breaks
+```
 
+```{r}
+mychoro <- function(d, fill_label=''){
+  # d has a variable "outcome" that 
+  # is plotted as the fill measure
+  chor <- left_join(county_df, d)
+  plt <- ggplot(chor, aes(long,lat, group=group))+
+  geom_polygon(aes(fill=outcome))+    
+  geom_path(color='white',alpha=0.5,size=0.2)+
+  geom_polygon(data=state_df, color='black',fill=NA)+
+  scale_fill_brewer(palette='PuRd')+
+  labs(x='',y='', fill=fill_label)+
+  theme(axis.text.x=element_blank(), 
+  axis.text.y=element_blank(), 
+  axis.ticks.x=element_blank(),axis.ticks.y=element_blank())
+  return(plt)
+}
+```
+
+```{r}
+plt_list <- vector('list',n)
+for(i in 1:n){
+dat_list[[i]] <- mutate(dat_list[[i]],                        
+outcome=Discretize(avg_annual_pay,breaks=breaks))
+plt_list[[i]] <-
+mychoro(dat_list[[i]])+ggtitle(names(dat_list)[i])
+}
+```
+
+```{r}
+choroplethr_animate(plt_list)
+```
+```{r}
+install.packages('rbenchmark')
+```
+
+```{r}
+library('rbenchmark')
+```
+
+```{r}
+opload <- benchmark(
+  CSV=read.csv('data/2017.annual.singlefile.csv', 
+  stringsAsFactors=F),
+  CSVZIP=read.csv(unz('data/2017_annual_singlefile.zip',
+   '2017.annual.singlefile.csv'), stringsAsFactors=F),
+  LOAD = load('data/ann2017full.rda'),
+  FREAD = fread('data/2017.annual.singlefile.csv'),
+  order='relative', # Report in order from shortest to longest 
+  replications=5
+)
 ```
 
 
