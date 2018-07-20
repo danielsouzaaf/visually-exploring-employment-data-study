@@ -213,5 +213,31 @@ ggplot(chor, aes(long,lat, group=group))+
   labs(x='',y='', fill='Avg Annual Pay')+
   theme(axis.text.x=element_blank(), axis.text.y=element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank())
 ```
+```{r}
+d.sectors <- filter(ann2017full, industry_code %in% c(11,21,54,52),
+own_code==5, # Private sector 
+agglvl_code == 74 # county-level
+) %>%
+select(state,county,industry_code, own_code,agglvl_code,  
+      industry_title, own_title, avg_annual_pay, 
+      annual_avg_emplvl)%>%
+mutate(wage=Discretize(avg_annual_pay),
+emplevel=Discretize(annual_avg_emplvl))
+d.sectors <- filter(d.sectors, !is.na(industry_code))
+```
+
+```{r}
+chor <- left_join(county_df, d.sectors)
+ggplot(chor, aes(long,lat,group=group))+
+  geom_polygon(aes(fill=emplevel))+
+  geom_polygon(data=state_df, color='black',fill=NA)+
+  scale_fill_brewer(palette='PuBu')+
+  facet_wrap(~industry_title, ncol=2, as.table=T)+
+  labs(fill='Avg Employment Level',x='',y='')+
+  theme(axis.text.x=element_blank(), 
+      axis.text.y=element_blank(),   
+     axis.ticks.x=element_blank(), 
+     axis.ticks.y=element_blank())
+```
 
 
