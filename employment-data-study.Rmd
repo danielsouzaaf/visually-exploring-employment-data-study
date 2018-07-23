@@ -1,10 +1,12 @@
 ---
 title: "R Notebook"
 output:
-  pdf_document: default
+  html_document:
+    df_print: paged
   html_notebook: default
+  pdf_document: default
 ---
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 install.packages('data.table',repos='https://cran.fiocruz.br/')
 install.packages('plyr',repos='https://cran.fiocruz.br/')
 install.packages('dplyr',repos='https://cran.fiocruz.br/')
@@ -15,13 +17,13 @@ install.packages('bit64',repos='https://cran.fiocruz.br/')
 install.packages('RColorBrewer',repos='https://cran.fiocruz.br/')
 install.packages('choroplethr',repos='https://cran.fiocruz.br/')
 ```
-```{r}
+```{r include=FALSE}
 install.packages('choroplethr',repos='https://cran.fiocruz.br/')
 
 ```
 
 
-```{r}
+```{r include=FALSE}
 library(data.table)
 library(plyr)
 library(dplyr)
@@ -33,10 +35,14 @@ library(RColorBrewer)
 library(choroplethr)
 ```
 
+## Importing employment data into R
 
 ```{r}
 ann2017 <- fread('data/2017.annual.singlefile.csv', sep=',')
 ```
+
+## Exploring the employment data
+
 
 ```{r}
 dim(ann2017)
@@ -46,6 +52,9 @@ dim(ann2017)
 ```{r}
 head(ann2017)
 ```
+
+## Obtaining and merging additional data
+
 
 ```{r}
 for(u in c('agglevel','area','industry','ownership','size')){
@@ -61,6 +70,9 @@ for(i in 1:length(codes)){
 eval(parse(text=paste('ann2017full <- left_join(ann2017full, ',codes[i],')', sep='')))
 }
 ```
+
+## Adding geographical information
+
 ```{r}
 head(area)
 ```
@@ -128,6 +140,8 @@ save(ann2017full, file='data/ann2017full.rda',compress=T)
 head(ann2017full)
 ```
 
+## Extracting state- and county-level wage and employment information
+
 ```{r}
 d.state <- filter(ann2017full, agglvl_code==50)
 d.state <- select(d.state, state, avg_annual_pay, annual_avg_emplvl)
@@ -179,6 +193,8 @@ mutate(wage=Discretize(avg_annual_pay),
 empquantile=Discretize(annual_avg_emplvl))
 ```
 
+## Visualizing geographical distributions of pay
+
 ```{r}
 state_df <- map_data('state')
 county_df <- map_data('county')
@@ -213,6 +229,9 @@ ggplot(chor, aes(long,lat, group=group))+
   labs(x='',y='', fill='Avg Annual Pay')+
   theme(axis.text.x=element_blank(), axis.text.y=element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank())
 ```
+
+## Exploring where the jobs are, by industry
+
 ```{r}
 d.sectors <- filter(ann2017full, industry_code %in% c(11,21,54,52),
 own_code==5, # Private sector 
@@ -240,9 +259,11 @@ ggplot(chor, aes(long,lat,group=group))+
      axis.ticks.y=element_blank())
 ```
 
+## Animating maps for a geospatial time series
+
 ```{r}
 get_data <- function(zipfile){
-  unzip(file.path('data',zipfile), exdir='data') # unzips the file
+  #unzip(file.path('data',zipfile), exdir='data') # unzips the file
   csvfile <- gsub('zip','csv', zipfile) # Change file name
   csvfile <- gsub('_','.',csvfile) # Change _ to . in name
   dat <- fread(file.path('data', csvfile)) # read data
@@ -304,25 +325,25 @@ mychoro(dat_list[[i]])+ggtitle(names(dat_list)[i])
 ```{r}
 choroplethr_animate(plt_list)
 ```
-```{r}
-install.packages('rbenchmark')
+
+
+```{r include=FALSE}
+#install.packages('rbenchmark')
 ```
 
-```{r}
-library('rbenchmark')
+```{r include=FALSE}
+#library('rbenchmark')
 ```
 
-```{r}
-opload <- benchmark(
-  CSV=read.csv('data/2017.annual.singlefile.csv', 
-  stringsAsFactors=F),
-  CSVZIP=read.csv(unz('data/2017_annual_singlefile.zip',
-   '2017.annual.singlefile.csv'), stringsAsFactors=F),
-  LOAD = load('data/ann2017full.rda'),
-  FREAD = fread('data/2017.annual.singlefile.csv'),
-  order='relative', # Report in order from shortest to longest 
-  replications=5
-)
+```{r include=FALSE}
+#opload <- benchmark(
+#  CSV=read.csv('data/2017.annual.singlefile.csv', 
+#  stringsAsFactors=F),
+#  CSVZIP=read.csv(unz('data/2017_annual_singlefile.zip',
+#   '2017.annual.singlefile.csv'), stringsAsFactors=F),
+#  LOAD = load('data/ann2017full.rda'),
+#  FREAD = fread('data/2017.annual.singlefile.csv'),
+#  order='relative', # Report in order from shortest to longest 
+#  replications=5
+#)
 ```
-
-
